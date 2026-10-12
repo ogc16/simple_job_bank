@@ -1,0 +1,56 @@
+# Attach SLSA provenance (attest-build-provenance) to GitHub releases and
+# upload the attested source archive as a release asset. Gives the OpenSSF
+# Scorecard "Signed-Releases" check a matching digests to verify.
+name: Release provenance
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to attest and attach the archive to
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  attest:
+    name: Attest build provenance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve release tag
+        id: resolve
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Checkout release code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ steps.resolve.outputs.tag }}
+          persist-credentials: false
+      - name: Create source archive
+        shell: bash
+        run: |
+          archive="simple_job_bank-${{ steps.resolve.outputs.tag }}.tar.gz"
+          tar -czf "$archive" --exclude='.git' --exclude='.github' .
+          echo "archive=$archive" >> "$GITHUB_OUTPUT"
+        id: archive
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-path: ${{ steps.archive.outputs.archive }}
+      - name: Upload asset to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release upload "${{ steps.resolve.outputs.tag }}" "${{ steps.archive.outputs.archive }}"
