@@ -1,0 +1,13 @@
+# Keep the GitHub Actions pinned tags current.
+# There are no package manifests in this repo (it is dependency-free), so
+# Dependabot updates workflow actions only.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore(ci)"
+    open-pull-requests-limit: 10

@@ -3,6 +3,8 @@
    type, a seniority level and a position type — the latter three are rendered
    as colored pill badges.  Salary is expressed in whole-thousands (annual, USD). */
 
+/* exported JOBS */
+
 /** @type {Job[]} */
 var JOBS = [
   {

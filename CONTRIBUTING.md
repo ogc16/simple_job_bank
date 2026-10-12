@@ -33,7 +33,8 @@ docs/architecture.md  # UML diagrams (mermaid)
 ## Rules of the road
 
 - **Stay zero-dependency.** No `package.json` bloat, no build step. Tests use
-  Node's built-in `node:test` runner; types are JSDoc checked with `tsc`.
+  Node's built-in `node:test` runner; types are JSDoc checked with `tsc`;
+  linting uses ESLint core rules only.
 - **Keep the browser scripts classic.** The scripts are loaded with plain
   `<script>` tags. Don't introduce `import`/`export` — the test harness loads
   them in a `vm` sandbox exactly as a browser would.
@@ -67,11 +68,17 @@ added to the repo):
 npx --yes -p typescript tsc -p jsconfig.json
 ```
 
+The lint pass (fetches ESLint on demand, core rules only):
+
+```
+npx --yes eslint@9 js tests
+```
+
 ## Pull requests
 
 - One logical change per PR.
-- If you touched `js/`, make sure both commands above pass and add/update tests
-  in `tests/` for any behavior change.
+- If you touched `js/`, make sure all three checks pass and add/update tests
+  in `tests/` for any behavior change:
 - Keep the README's structure and "how the shared pieces work" sections in sync
   if you add or rename files.
 - Rebase on the latest `main` rather than merging.

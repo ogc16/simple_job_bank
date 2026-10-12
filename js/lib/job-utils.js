@@ -7,6 +7,8 @@
 
    Depends on nothing. ES5-friendly to match the rest of the codebase. */
 
+/* exported JobUtils */
+
 /**
  * A single job listing.
  *

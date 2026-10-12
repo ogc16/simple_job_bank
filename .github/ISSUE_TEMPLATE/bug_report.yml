@@ -1,0 +1,63 @@
+name: Bug report
+description: File a bug report to help us improve the portal
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. For security issues,
+        **do not** file an issue — see [SECURITY.md](../../../SECURITY.md).
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Describe the bug in a few sentences.
+      placeholder: "e.g. The Featured jobs on the homepage render empty after searching."
+    validations:
+      required: true
+
+  - type: input
+    id: page
+    attributes:
+      label: Page / URL
+      description: Which page did it happen on?
+      placeholder: "e.g. pages/jobs.html or index.html"
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps to trigger the issue.
+      placeholder: |
+        1. Open index.html
+        2. Type 'design' in the search box
+        3. See no featured cards
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: Browser + version.
+      placeholder: "e.g. Chrome 130 / Firefox 131"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - Cosmetic (visual only)
+        - Functional (feature broken)
+        - Data loss / security
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: "Optional: add a screenshot or a minimal repro file."

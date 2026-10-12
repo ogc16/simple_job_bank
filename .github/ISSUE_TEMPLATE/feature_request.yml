@@ -1,0 +1,43 @@
+name: Feature request
+description: Suggest an idea for the portal
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature. Before submitting, check the
+        roadmap in the [README](../../README.md) and existing issues.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the problem or a use case, not the solution.
+      placeholder: "e.g. Job seekers cannot tell at a glance which jobs are remote."
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: Proposed behavior
+      description: What should happen?
+      placeholder: "e.g. Add a 'Remote only' toggle next to the location select."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workarounds or other approaches you tried.
+      validations:
+        required: false
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      description: Keep the project's constraints in mind.
+      options:
+        - label: "The change keeps the project zero-dependency (no build step)."

@@ -7,6 +7,9 @@
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-44cc11)](#)
 [![Tests](https://img.shields.io/badge/tests-node%3Atest-2fbf4f)](tests/)
 [![Typed](https://img.shields.io/badge/typed-JSDoc%20%2F%20checkJs-3178c6)](jsconfig.json)
+[![CI](https://github.com/ogc16/simple_job_bank/actions/workflows/ci.yml/badge.svg)](https://github.com/ogc16/simple_job_bank/actions/workflows/ci.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/ogc16/simple_job_bank/badge)](https://securityscorecards.dev/viewer/?uri=github.com/ogc16/simple_job_bank)
+[![Dependabot](https://img.shields.io/badge/dependabot-enabled-36BCF7)](.github/dependabot.yml)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-8A2BE2)](CONTRIBUTING.md)
 
 A lightweight, static job search portal with a live filtering dashboard. Pure HTML, CSS, and vanilla JavaScript — no build step, no framework, no dependencies beyond Font Awesome.
@@ -74,12 +77,117 @@ npx serve .
 │   └── helpers/load-script.js  # Loads browser scripts in a vm sandbox
 ├── docs/
 │   └── architecture.md     # UML diagrams (Mermaid: class, component, sequence, state)
+├── .github/                # CI, scorecard, dependabot, issue/PR templates
 ├── jsconfig.json           # JSDoc type-checking config (checkJs + tsc --noEmit)
+├── eslint.config.js        # ESLint flat config (zero-dependency)
+├── .editorconfig           # Editor/IDE formatting defaults
+├── .gitattributes          # Line-ending & diff normalization
+├── CHANGELOG.md            # Keep a Changelog / SemVer history
 ├── SECURITY.md             # Security policy & disclosure
 ├── CONTRIBUTING.md         # Contribution guide
 ├── CODE_OF_CONDUCT.md      # Contributor Covenant 2.1
 ├── LICENSE                 # MIT license
 └── pic/logo.jpg            # Favicon / brand logo
+```
+
+## Architecture
+
+UML diagrams (Mermaid — rendered automatically on GitHub). The full set,
+including state and activity diagrams, lives in [docs/architecture.md](docs/architecture.md).
+
+### Class diagram — data model
+
+```mermaid
+classDiagram
+    class Job {
+        +string title
+        +string company
+        +string icon
+        +string[] categories
+        +number salaryMin
+        +number salaryMax
+        +number postedDays
+        +string type
+        +string location
+        +string level
+        +boolean dashboard
+    }
+
+    class JobUtils {
+        +filterJobs(Job[], FilterCriteria) Job[]
+        +validateJobs(Job[]) string[]
+        +renderCard(Job, string) string
+        +computeStats(ApplicationEntry[], number) stats
+        +buildApplicationsCsv(ApplicationEntry[], Job[], Stage[]) string
+        +debounce(Function, number) Function
+        +toggleTag(string[], string) string[]
+    }
+
+    class FilterCriteria {
+        +string query
+        +string category
+        +string location
+        +string salary
+        +number maxDays
+        +string[] tags
+    }
+
+    class ApplicationEntry {
+        +number jobIndex
+        +number stage
+        +number appliedDays
+    }
+
+    JobUtils --> Job : rules operate on
+    JobUtils --> FilterCriteria : input to filterJobs
+    JobUtils --> ApplicationEntry : input to stats / CSV
+```
+
+### Component diagram — pages, scripts, data flow
+
+```mermaid
+flowchart LR
+    INDEX[index.html]
+    DASH[pages/dashboard.html]
+    JOBS[pages/jobs.html]
+    OTHER[all other pages]
+    UTILS[js/lib/job-utils.js]
+    DATA[js/jobs.js]
+    FILTERS[js/job-filters.js]
+    DASHJS[js/dashboard.js]
+    NAV[js/layout.js]
+    TESTS[tests/]
+
+    INDEX --> UTILS & DATA & FILTERS & NAV
+    DASH --> UTILS & DATA & FILTERS & DASHJS & NAV
+    JOBS --> UTILS & DATA & FILTERS & NAV
+    OTHER --> NAV
+    FILTERS --> UTILS & DATA
+    DASHJS --> UTILS & DATA
+    TESTS -. loads in vm sandbox .-> UTILS & DATA
+```
+
+### Sequence diagram — filtering a job list
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Page as jobs.html / dashboard.html
+    participant JS as job-filters.js
+    participant Utils as job-utils.js
+    participant DOM as job-list element
+
+    User->>Page: types in #job-search / changes a select / taps a chip
+    Page->>JS: input / change / click event
+    JS->>JS: debounce (250 ms) or immediate dispatch
+    JS->>Utils: filterJobs(JOBS, criteria)
+    Utils-->>JS: Job[] matching
+    loop each matching job
+        JS->>Utils: renderCard(job, JOB_DETAILS_HREF)
+        Utils-->>JS: <a class="job_card">…</a>
+    end
+    JS->>DOM: innerHTML / count / empty-state toggle
+    DOM-->>User: rendered cards update
 ```
 
 ## Development
@@ -93,6 +201,12 @@ Node's built-in test runner:
 node --test
 ```
 
+With a coverage report (per-file line/branch/function coverage, no extra deps):
+
+```
+node --test --experimental-test-coverage
+```
+
 **Type-check.** The code is typed with JSDoc and verified with the TypeScript
 compiler (`tsc -p jsconfig.json`). TypeScript itself is fetched on demand via
 `npx` and never becomes a project dependency:
@@ -101,11 +215,23 @@ compiler (`tsc -p jsconfig.json`). TypeScript itself is fetched on demand via
 npx --yes -p typescript tsc -p jsconfig.json
 ```
 
-**Architecture diagrams.** See [docs/architecture.md](docs/architecture.md) for
-the UML class / component / sequence / state diagrams (rendered with Mermaid).
+**Lint.** ESLint (flat config, core rules only, no packages added):
+
+```
+npx --yes eslint@9 js tests
+```
+
+Every pull request must pass all three. **CI** runs them on GitHub Actions
+(git push to `main`, pull requests), **Dependabot** keeps the workflow actions
+updated, and [OpenSSF Scorecard](https://www.securityscorecards.dev/) monitors
+supply-chain security weekly and publishes results to the Security tab.
+
+**Architecture diagrams.** The key UML diagrams (class / component / sequence)
+are rendered above; [docs/architecture.md](docs/architecture.md) adds the state
+and activity diagrams.
 
 For contribution guidance, see [CONTRIBUTING.md](CONTRIBUTING.md); for security
-matters, [SECURITY.md](SECURITY.md).
+matters, [SECURITY.md](SECURITY.md). Releases are tracked in [CHANGELOG.md](CHANGELOG.md).
 
 ## How the shared pieces work
 

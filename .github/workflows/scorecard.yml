@@ -1,0 +1,43 @@
+# OpenSSF Scorecard — automated security health checks. Results are uploaded
+# as a SARIF scan under the GitHub Security tab and published for the badge:
+#   https://api.securityscorecards.dev/projects/github.com/ogc16/simple_job_bank
+name: Scorecard supply-chain security
+
+on:
+  branch_protection_rule:
+  schedule:
+    - cron: '27 6 * * 1'     # weekly, Monday 06:27
+  push:
+    branches:
+      - main
+
+permissions: read-all
+
+jobs:
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write    # upload the SARIF to code scanning
+      id-token: write           # sign a provenance attestation
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run analysis
+        uses: ossf/scorecard-action@v2
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sarif-results
+          path: results.sarif
+          retention-days: 5
+      - name: Upload to code-scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
