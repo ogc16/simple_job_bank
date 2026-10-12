@@ -12,13 +12,15 @@ on:
       - main
   workflow_dispatch:          # allow manual runs to refresh the badge
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   analysis:
     name: Scorecard analysis
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       security-events: write    # upload the SARIF to code scanning
       id-token: write           # sign a provenance attestation
     steps:
