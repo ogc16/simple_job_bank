@@ -60,7 +60,7 @@ jobs:
           ARCHIVE: ${{ steps.archive.outputs.archive }}
         shell: bash
         run: |
-          cosign sign-blob --yes --keyless \
+          cosign sign-blob --yes \
             --output-signature "$ARCHIVE.sig" \
             --output-certificate "$ARCHIVE.cert" \
             "$ARCHIVE"
