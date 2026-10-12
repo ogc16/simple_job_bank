@@ -8,6 +8,7 @@
 [![Tests](https://img.shields.io/badge/tests-node%3Atest-2fbf4f)](tests/)
 [![Typed](https://img.shields.io/badge/typed-JSDoc%20%2F%20checkJs-3178c6)](jsconfig.json)
 [![CI](https://github.com/ogc16/simple_job_bank/actions/workflows/ci.yml/badge.svg)](https://github.com/ogc16/simple_job_bank/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/ogc16/simple_job_bank/actions/workflows/codeql.yml/badge.svg)](https://github.com/ogc16/simple_job_bank/actions/workflows/codeql.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/ogc16/simple_job_bank/badge)](https://securityscorecards.dev/viewer/?uri=github.com/ogc16/simple_job_bank)
 [![Dependabot](https://img.shields.io/badge/dependabot-enabled-36BCF7)](.github/dependabot.yml)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-8A2BE2)](CONTRIBUTING.md)
@@ -74,10 +75,16 @@ npx serve .
 ├── tests/                  # Zero-dependency test suite (Node's built-in runner)
 │   ├── job-utils.test.js   # Unit tests for the pure rules
 │   ├── jobs-data.test.js   # Data-integrity tests for the job listings
-│   └── helpers/load-script.js  # Loads browser scripts in a vm sandbox
+│   ├── job-filters.dom.test.js  # End-to-end filter tests against a DOM stub
+│   ├── dashboard.dom.test.js    # End-to-end dashboard tests against a DOM stub
+│   ├── check-coverage.js   # Coverage gate enforced by CI (fails under thresholds)
+│   └── helpers/            # vm sandbox + DOM stub shared by all tests
 ├── docs/
 │   └── architecture.md     # UML diagrams (Mermaid: class, component, sequence, state)
-├── .github/                # CI, scorecard, dependabot, issue/PR templates
+├── .github/                # CI, CodeQL SAST, scorecard, dependabot, issue/PR templates
+├── 404.html                # Friendly not-found page
+├── robots.txt              # Crawler rules + sitemap pointer
+├── sitemap.xml             # XML sitemap for search engines
 ├── jsconfig.json           # JSDoc type-checking config (checkJs + tsc --noEmit)
 ├── eslint.config.js        # ESLint flat config (zero-dependency)
 ├── .editorconfig           # Editor/IDE formatting defaults
@@ -194,17 +201,20 @@ sequenceDiagram
 
 No install is required for anything.
 
-**Run the tests.** They load the real browser scripts in a `vm` sandbox and use
-Node's built-in test runner:
+**Run the tests.** They load the real browser scripts in a `vm` sandbox — plus a
+DOM stub for the UI scripts — and use Node's built-in test runner:
 
 ```
 node --test
 ```
 
-With a coverage report (per-file line/branch/function coverage, no extra deps):
+**Enforce the coverage gate.** CI runs the same suite under the built-in
+coverage reporter and fails any pull request whose aggregate coverage drops
+below the thresholds in `tests/check-coverage.js` (line ≥ 90%, branch ≥ 75%,
+funcs ≥ 90%):
 
 ```
-node --test --experimental-test-coverage
+node tests/check-coverage.js
 ```
 
 **Type-check.** The code is typed with JSDoc and verified with the TypeScript
@@ -221,10 +231,12 @@ npx --yes -p typescript tsc -p jsconfig.json
 npx --yes eslint@9 js tests
 ```
 
-Every pull request must pass all three. **CI** runs them on GitHub Actions
-(git push to `main`, pull requests), **Dependabot** keeps the workflow actions
-updated, and [OpenSSF Scorecard](https://www.securityscorecards.dev/) monitors
-supply-chain security weekly and publishes results to the Security tab.
+Every pull request must pass all four (tests, coverage gate, type check, lint).
+**CI** runs them on GitHub Actions (git push to `main`, pull requests),
+**CodeQL** performs semantic SAST on the same flow, **Dependabot** keeps the
+workflow actions updated, and [OpenSSF Scorecard](https://www.securityscorecards.dev/)
+monitors supply-chain security weekly and publishes results to the Security tab.
+Releases are attested with SLSA build provenance via `attest-build-provenance`.
 
 **Architecture diagrams.** The key UML diagrams (class / component / sequence)
 are rendered above; [docs/architecture.md](docs/architecture.md) adds the state

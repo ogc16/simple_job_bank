@@ -6,6 +6,17 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Added
+
+- DOM-level tests for `js/job-filters.js` and `js/dashboard.js` using a custom DOM stub
+  (coverage now ~98% lines, ~85% branches, ~98% funcs).
+- Enforced coverage gate `tests/check-coverage.js` (line ≥ 90%, branch ≥ 75%, funcs ≥ 90%) in CI.
+- CodeQL SAST workflow (JavaScript, `security-and-quality` queries), SHA-pinned.
+- `404.html`, `robots.txt`, and `sitemap.xml` for crawlers and search engines.
+- SEO/Open Graph meta tags and canonical URLs on the landing, jobs, and dashboard pages.
+- SHA-pinned all GitHub Actions, added SLSA build provenance attestation for releases,
+  and applied GitHub branch protection (required checks, linear history) on `main`.
+
 ## [0.1.0] - 2026-10-12
 
 ### Added
