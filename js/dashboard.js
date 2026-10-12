@@ -1,7 +1,9 @@
 /* ── Dashboard control center.
    Renders the personalized greeting, summary stats, notifications,
    the application pipeline (Applied → Shortlisted → Interview → Offer)
-   and CSV export – all from the shared JOBS data in jobs.js. */
+   and CSV export – all from the shared JOBS data in jobs.js. Pure rule
+   computations (stats, formatting, CSV) live in job-utils.js (global
+   `JobUtils`). */
 
 (function () {
     'use strict';
@@ -41,26 +43,20 @@
     /* ── Summary stats ───────────────────────────────────────────────── */
 
     function updateStats() {
-        var applied = APP_HISTORY.length;
-        var interviews = APP_HISTORY.filter(function (a) { return a.stage >= 2; }).length;
-        var offers = APP_HISTORY.filter(function (a) { return a.stage === 3; }).length;
-
-        setText('stat-applied', applied);
-        setText('stat-interviews', interviews);
-        setText('stat-saved', SAVED_JOBS.length);
-        setText('stat-offers', offers);
+        var stats = JobUtils.computeStats(APP_HISTORY, SAVED_JOBS.length);
+        setText('stat-applied', stats.applied);
+        setText('stat-interviews', stats.interviews);
+        setText('stat-saved', stats.saved);
+        setText('stat-offers', stats.offers);
     }
 
+    /** @param {string} id @param {string | number} val */
     function setText(id, val) {
         var el = document.getElementById(id);
         if (el) { el.textContent = String(val); }
     }
 
     /* ── Applications pipeline ───────────────────────────────────────── */
-
-    function dateText(days) {
-        return days + (days === 1 ? ' day ago' : ' days ago');
-    }
 
     function renderPipeline() {
         var list = document.getElementById('pipeline-list');
@@ -79,7 +75,7 @@
                         '<div class="img"><i class="' + job.icon + '" aria-hidden="true"></i></div>' +
                         '<div class="pipe-text">' +
                             '<h4>' + job.title + '</h4>' +
-                            '<span>' + job.company + ' \u00b7 Applied ' + dateText(app.appliedDays) + '</span>' +
+                            '<span>' + job.company + ' \u00b7 Applied ' + JobUtils.dateText(app.appliedDays) + '</span>' +
                         '</div>' +
                         '<span class="badge ' + stage.badge + '">' + stage.label + '</span>' +
                     '</div>' +
@@ -143,22 +139,7 @@
     function exportCSV() {
         if (typeof JOBS === 'undefined') { return; }
 
-        var rows = [['Job', 'Company', 'Salary range', 'Location', 'Applied', 'Stage']];
-        APP_HISTORY.forEach(function (app) {
-            var job = JOBS[app.jobIndex];
-            rows.push([
-                job.title,
-                job.company,
-                '$' + job.salaryMin + 'k\u2013$' + job.salaryMax + 'k/yr',
-                job.location,
-                dateText(app.appliedDays),
-                STAGES[app.stage].label
-            ]);
-        });
-
-        var csv = rows.map(function (r) {
-            return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(',');
-        }).join('\r\n');
+        var csv = JobUtils.buildApplicationsCsv(APP_HISTORY, JOBS, STAGES);
 
         var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
         var url = URL.createObjectURL(blob);
@@ -173,8 +154,9 @@
         var btn = document.getElementById('export-csv');
         if (btn) {
             var original = btn.textContent;
+            var resetBtn = btn;
             btn.textContent = 'Downloaded! Check your downloads';
-            setTimeout(function () { btn.textContent = original; }, 2500);
+            setTimeout(function () { resetBtn.textContent = original; }, 2500);
         }
     }
 
@@ -183,6 +165,7 @@
 
     /* ── Quick actions (scroll to sections) ──────────────────────────── */
 
+    /** @param {string} sel */
     function scrollTo(sel) {
         return function () {
             var el = document.querySelector(sel);

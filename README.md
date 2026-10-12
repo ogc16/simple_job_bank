@@ -1,5 +1,14 @@
 # Job Portal
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-brightgreen)](LICENSE)
+[![Security policy](https://img.shields.io/badge/security-policy-1E8E3E)](SECURITY.md)
+[![Open Source](https://img.shields.io/badge/status-active-brightgreen)](https://opensource.org/licenses/MIT)
+[![Stack](https://img.shields.io/badge/stack-HTML%20%7C%20CSS%20%7C%20JS-3766AB)](#)
+[![Dependencies](https://img.shields.io/badge/dependencies-zero-44cc11)](#)
+[![Tests](https://img.shields.io/badge/tests-node%3Atest-2fbf4f)](tests/)
+[![Typed](https://img.shields.io/badge/typed-JSDoc%20%2F%20checkJs-3178c6)](jsconfig.json)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-8A2BE2)](CONTRIBUTING.md)
+
 A lightweight, static job search portal with a live filtering dashboard. Pure HTML, CSS, and vanilla JavaScript — no build step, no framework, no dependencies beyond Font Awesome.
 
 ## Pages
@@ -54,18 +63,56 @@ npx serve .
 │   ├── style.css           # Portal styles (design tokens, badges, skeleton, responsive)
 │   └── login.css           # Auth page styles
 ├── js/                     # Scripts
+│   ├── lib/job-utils.js    # Pure rules + JSDoc types: formatting, filters, validation, CSV
 │   ├── jobs.js             # Job data (single source of truth for all listings)
 │   ├── job-filters.js      # Renderer, debounced search, skeleton, empty state, badges
 │   ├── dashboard.js        # Dashboard: greeting, stats, notifications, pipeline, CSV export
 │   └── layout.js           # Shared sidebar navigation (single source of truth)
+├── tests/                  # Zero-dependency test suite (Node's built-in runner)
+│   ├── job-utils.test.js   # Unit tests for the pure rules
+│   ├── jobs-data.test.js   # Data-integrity tests for the job listings
+│   └── helpers/load-script.js  # Loads browser scripts in a vm sandbox
+├── docs/
+│   └── architecture.md     # UML diagrams (Mermaid: class, component, sequence, state)
+├── jsconfig.json           # JSDoc type-checking config (checkJs + tsc --noEmit)
+├── SECURITY.md             # Security policy & disclosure
+├── CONTRIBUTING.md         # Contribution guide
+├── CODE_OF_CONDUCT.md      # Contributor Covenant 2.1
+├── LICENSE                 # MIT license
 └── pic/logo.jpg            # Favicon / brand logo
 ```
 
+## Development
+
+No install is required for anything.
+
+**Run the tests.** They load the real browser scripts in a `vm` sandbox and use
+Node's built-in test runner:
+
+```
+node --test
+```
+
+**Type-check.** The code is typed with JSDoc and verified with the TypeScript
+compiler (`tsc -p jsconfig.json`). TypeScript itself is fetched on demand via
+`npx` and never becomes a project dependency:
+
+```
+npx --yes -p typescript tsc -p jsconfig.json
+```
+
+**Architecture diagrams.** See [docs/architecture.md](docs/architecture.md) for
+the UML class / component / sequence / state diagrams (rendered with Mermaid).
+
+For contribution guidance, see [CONTRIBUTING.md](CONTRIBUTING.md); for security
+matters, [SECURITY.md](SECURITY.md).
+
 ## How the shared pieces work
 
-- **`js/jobs.js`** — the single source of truth for all job listings. Each entry carries the title, company, icon class, salary range, posting age, category tags, and structured fields for location, type, and seniority level — all rendered automatically.
-- **`js/job-filters.js`** — renders cards from `js/jobs.js` and powers search (debounced 250 ms), category, location, salary-range, recency selects, and tag chips on `pages/dashboard.html` / `pages/jobs.html`. All filter controls are optional — a page shows only the controls it defines. On `index.html` it renders the top 3 most recent jobs as featured cards. A skeleton shimmer is shown briefly during initial render, and an empty state appears when no jobs match the current filters.
-- **`js/dashboard.js`** — the dashboard control center. Greets the user by name (read from `localStorage.portal.user`, set when logging in or signing up), computes summary stats (applied / interviews / saved / offers), renders the application pipeline with a 4-step progress bar (Applied → Shortlisted → Interview → Offer), lists notifications with read-state badges, and exports application history as a CSV download.
+- **`js/lib/job-utils.js`** — the pure, tested core. Formatting (`salaryText`, `dateText`, badges), filtering (`filterJobs`), data validation (`validateJobs`), and dashboard computations (stats, CSV). Loaded on every page that uses job logic; also what the unit tests exercise.
+- **`js/jobs.js`** — the single source of truth for all job listings. Each entry carries the title, company, icon class, salary range, posting age, category tags, and structured fields for location, type, and seniority level — all rendered automatically and validated by `tests/jobs-data.test.js`.
+- **`js/job-filters.js`** — renders cards from `js/jobs.js` via `job-utils.js` and powers search (debounced 250 ms), category, location, salary-range, recency selects, and tag chips on `pages/dashboard.html` / `pages/jobs.html`. All filter controls are optional — a page shows only the controls it defines. On `index.html` it renders the top 3 most recent jobs as featured cards. A skeleton shimmer is shown briefly during initial render, and an empty state appears when no jobs match the current filters.
+- **`js/dashboard.js`** — the dashboard control center. Greets the user by name (read from `localStorage.portal.user`, set when logging in or signing up), computes summary stats (applied / interviews / saved / offers) via `job-utils.js`, renders the application pipeline with a 4-step progress bar (Applied → Shortlisted → Interview → Offer), lists notifications with read-state badges, and exports application history as a CSV download.
 - **`js/layout.js`** — injects the sidebar into every portal page (pages contain only `<nav id="app-nav"></nav>`). It detects the current page from the URL and marks the matching link as active, so adding or renaming a page is a one-line change.
 - **`css/style.css`** — colors are defined once as CSS variables in `:root` (e.g. `--accent`, `--bg`), so rebranding is a single edit. Includes card hover/active/focus-visible states, colored badge pills for location/type/level, skeleton shimmer animation, and responsive breakpoints at 1024px, 768px, and 480px.
 
