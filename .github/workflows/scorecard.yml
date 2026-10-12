@@ -23,6 +23,7 @@ jobs:
       contents: read
       security-events: write    # upload the SARIF to code scanning
       id-token: write           # sign a provenance attestation
+      attestations: read        # detect release provenance (Signed-Releases check)
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
