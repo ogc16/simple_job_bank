@@ -1,0 +1,6 @@
+# Allow all well-behaved crawlers.
+# Update the Sitemap URL if the site is published on a custom domain.
+User-agent: *
+Allow: /
+
+Sitemap: https://ogc16.github.io/simple_job_bank/sitemap.xml
