@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: read
+  security-events: write     # upload SARIF scans to code scanning on push
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
